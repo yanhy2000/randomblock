@@ -1,7 +1,11 @@
 package top.yanhy.randomblock.config;
 
 import net.minecraft.block.Block;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.block.BlockState;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.TagKey;
+import net.minecraft.util.Identifier;
+
 import java.util.*;
 
 public class ConfigManager {
@@ -20,7 +24,8 @@ public class ConfigManager {
     private static void initWeightedRandomBlocks() {
         weightedRandomBlocks = new ArrayList<>();
         for (String blockId : randomBlocks) {
-            Block block = Registry.BLOCK.get(new Identifier(blockId));
+            // 使用新的方式获取 Block 对象
+            Block block = Registries.BLOCK.get(Identifier.tryParse(blockId));
             int weight = blockWeights.getOrDefault(blockId, 1);
             for (int i = 0; i < weight; i++) {
                 weightedRandomBlocks.add(block);
@@ -29,8 +34,12 @@ public class ConfigManager {
     }
 
     public static boolean isProtected(BlockState state) {
-        String blockId = Registry.BLOCK.getId(state.getBlock()).toString();
+        // 获取 Block 的 ID
+        String blockId = Registries.BLOCK.getId(state.getBlock()).toString();
+
         return protectedBlocks.contains(blockId) ||
-                protectedBlocks.stream().anyMatch(tag -> tag.startsWith("#") && state.isIn(BlockTags.get(new Identifier(tag.substring(1))));
+                protectedBlocks.stream().anyMatch(tag ->
+                        tag.startsWith("#") && state.isIn(TagKey.of(Registries.BLOCK.getKey(), Identifier.tryParse(tag.substring(1))))
+                );
     }
 }

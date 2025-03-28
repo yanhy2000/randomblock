@@ -1,28 +1,33 @@
 package top.yanhy.randomblock.config;
 
 import com.google.gson.Gson;
-import net.minecraft.util.Identifier;
+import com.google.gson.reflect.TypeToken;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class BlockConfig {
     private static final Gson GSON = new Gson();
 
+    // 定义泛型类型
+    private static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {}.getType();
+    private static final Type MAP_STRING_INT_TYPE = new TypeToken<Map<String, Integer>>() {}.getType();
+
     public static List<String> loadProtectedBlocks() {
-        return loadJsonConfig("config/protected_blocks.json", List.class);
+        return loadJsonConfig("config/protected_blocks.json", LIST_STRING_TYPE);
     }
 
     public static List<String> loadRandomBlocks() {
-        return loadJsonConfig("config/random_blocks.json", List.class);
+        return loadJsonConfig("config/random_blocks.json", LIST_STRING_TYPE);
     }
 
     public static Map<String, Integer> loadBlockWeights() {
-        return loadJsonConfig("config/block_weights.json", Map.class);
+        return loadJsonConfig("config/block_weights.json", MAP_STRING_INT_TYPE);
     }
 
-    private static <T> T loadJsonConfig(String path, Class<T> type) {
+    private static <T> T loadJsonConfig(String path, Type type) {
         try (InputStreamReader reader = new InputStreamReader(
-                BlockConfig.class.getClassLoader().getResourceAsStream(path))) {
+                Objects.requireNonNull(BlockConfig.class.getClassLoader().getResourceAsStream(path)))) {
             return GSON.fromJson(reader, type);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load config: " + path, e);

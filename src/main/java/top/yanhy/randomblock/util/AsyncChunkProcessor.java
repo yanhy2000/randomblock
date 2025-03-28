@@ -11,13 +11,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class AsyncChunkProcessor {
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(4);
+    public static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(4);
 
     public static void processChunk(World world, Chunk chunk) {
         EXECUTOR.submit(() -> {
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    for (int y = world.getBottomY(); y < world.getTopY(); y++) {
+                    for (int y = -64; y < 319; y++) {
                         BlockPos pos = new BlockPos(chunk.getPos().getStartX() + x, y, chunk.getPos().getStartZ() + z);
                         BlockState current = world.getBlockState(pos);
 

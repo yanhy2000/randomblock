@@ -1,10 +1,11 @@
 package top.yanhy.randomblock;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.event.world.ChunkEvents;
 import top.yanhy.randomblock.command.ReloadCommand;
 import top.yanhy.randomblock.config.ConfigManager;
+import top.yanhy.randomblock.util.AsyncChunkProcessor;
 
 public class Randomblock implements ModInitializer {
     @Override
@@ -15,15 +16,10 @@ public class Randomblock implements ModInitializer {
         // 注册指令
         ReloadCommand.register();
 
-        // 监听区块加载
-        ChunkEvents.LOAD.register((chunk, world) -> {
-            if (world.getRegistryKey() != World.OVERWORLD) return;
-            AsyncChunkProcessor.processChunk(world, chunk);
-        });
+        // 监听区块生成事件（仅在新区块生成时触发）
+        ServerChunkEvents.CHUNK_LOAD.register(AsyncChunkProcessor::processChunk);
 
         // 服务器停止时关闭线程池
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            AsyncChunkProcessor.EXECUTOR.shutdown();
-        });
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> AsyncChunkProcessor.EXECUTOR.shutdown());
     }
 }

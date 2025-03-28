@@ -1,11 +1,25 @@
 [
   "minecraft:water",
+  "minecraft:bubble_column",
+  "minecraft:kelp",
+  "minecraft:seagrass",
+  "minecraft:tall_seagrass",
   "minecraft:lava",
-  "minecraft:grass_block",
-  "minecraft:mycelium",
+  "minecraft:grass",
   "minecraft:snow",
   "minecraft:chest",
   "minecraft:spawner",
   "#minecraft:flowers",
-  "#minecraft:replaceable_by_trees"
+  "#minecraft:replaceable_by_trees",
+  "minecraft:bedrock",
+  "minecraft:dragon_egg",
+  "minecraft:end_gateway",
+  "minecraft:end_portal",
+  "minecraft:end_portal_frame",
+  "minecraft:nether_portal",
+  "minecraft:obsidian",
+  "minecraft:dragon_head",
+  "minecraft:air",
+  "minecraft:cave_air",
+  "minecraft:void_air"
 ]

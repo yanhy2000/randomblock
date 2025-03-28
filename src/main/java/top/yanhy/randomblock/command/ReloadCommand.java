@@ -1,28 +1,28 @@
 package top.yanhy.randomblock.command;
 
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.LiteralText;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.Text;
 import top.yanhy.randomblock.config.ConfigManager;
-import static net.minecraft.server.command.CommandManager.*;
 
 public class ReloadCommand {
     public static void register() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-            dispatcher.register(
-                    literal("rb")
-                            .then(literal("reload")
-                                    .requires(source -> source.hasPermissionLevel(2))
-                                    .executes(context -> {
-                                        ConfigManager.reload();
-                                        context.getSource().sendFeedback(
-                                                new LiteralText("随机方块配置已重载！"),
-                                                true
-                                        );
-                                        return 1;
-                                    })
-                            )
-            );
-        });
+
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, res) -> dispatcher.register(
+                LiteralArgumentBuilder.<FabricClientCommandSource>literal("rb")
+                        .then(LiteralArgumentBuilder.<FabricClientCommandSource>literal("reload")
+                                .requires(source -> source.hasPermissionLevel(2))
+                                .executes(context -> {
+                                    ConfigManager.reload();
+                                    Text message = Text.literal( "随机方块配置已重载！" );
+                                    if (MinecraftClient.getInstance().player != null) {
+                                        MinecraftClient.getInstance().player.sendMessage(message, false);
+                                    }
+                                    return 1;
+                                })
+                        )
+        ));
     }
 }
