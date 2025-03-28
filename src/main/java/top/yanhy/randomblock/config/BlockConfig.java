@@ -14,15 +14,15 @@ public class BlockConfig {
     private static final Type MAP_STRING_INT_TYPE = new TypeToken<Map<String, Integer>>() {}.getType();
 
     public static List<String> loadProtectedBlocks() {
-        return loadJsonConfig("config/protected_blocks.json", LIST_STRING_TYPE);
+        return loadJsonConfig("rb_config/protected_blocks.json", LIST_STRING_TYPE);
     }
 
     public static List<String> loadRandomBlocks() {
-        return loadJsonConfig("config/random_blocks.json", LIST_STRING_TYPE);
+        return loadJsonConfig("rb_config/random_blocks.json", LIST_STRING_TYPE);
     }
 
     public static Map<String, Integer> loadBlockWeights() {
-        return loadJsonConfig("config/block_weights.json", MAP_STRING_INT_TYPE);
+        return loadJsonConfig("rb_config/block_weights.json", MAP_STRING_INT_TYPE);
     }
 
     private static <T> T loadJsonConfig(String path, Type type) {

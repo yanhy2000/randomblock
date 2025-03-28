@@ -18,6 +18,11 @@ public class Randomblock implements ModInitializer {
 
         // 监听区块生成事件（仅在新区块生成时触发）
         ServerChunkEvents.CHUNK_LOAD.register(AsyncChunkProcessor::processChunk);
+//        ServerChunkEvents.CHUNK_LOAD.register((world, chunk) -> {
+//                world.getServer().execute(() -> {
+//                    AsyncChunkProcessor.processChunk(world, chunk);
+//                });
+//        });
 
         // 服务器停止时关闭线程池
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> AsyncChunkProcessor.EXECUTOR.shutdown());
