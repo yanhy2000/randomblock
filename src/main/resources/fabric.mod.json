@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "randomblock",
+  "version": "${version}",
+  "name": "randomBlock",
+  "description": "在生成世界时保留原有地形但是替换大部分方块为随机方块！",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/randomblock/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "top.yanhy.randomblock.Randomblock"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

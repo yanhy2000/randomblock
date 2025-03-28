@@ -1,0 +1,11 @@
+[
+  "minecraft:water",
+  "minecraft:lava",
+  "minecraft:grass_block",
+  "minecraft:mycelium",
+  "minecraft:snow",
+  "minecraft:chest",
+  "minecraft:spawner",
+  "#minecraft:flowers",
+  "#minecraft:replaceable_by_trees"
+]
