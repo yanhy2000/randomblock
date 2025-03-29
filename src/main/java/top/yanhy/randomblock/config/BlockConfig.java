@@ -9,7 +9,6 @@ import java.util.*;
 public class BlockConfig {
     private static final Gson GSON = new Gson();
 
-    // 定义泛型类型
     private static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {}.getType();
     private static final Type MAP_STRING_INT_TYPE = new TypeToken<Map<String, Integer>>() {}.getType();
 

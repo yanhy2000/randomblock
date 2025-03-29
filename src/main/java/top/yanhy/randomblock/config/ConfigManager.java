@@ -13,48 +13,45 @@ public class ConfigManager {
     public static List<String> randomBlocks;
     public static Map<String, Integer> blockWeights;
     public static List<Block> weightedRandomBlocks;
-    public static Set<Block> protectedBlockSet;
-    public static Set<Long> processedChunks = new HashSet<>();
+
+    public static Set<Block> protectedBlockSet = new HashSet<>();
+    public static Set<TagKey<Block>> protectedTags = new HashSet<>();
 
     public static void reload() {
         protectedBlocks = BlockConfig.loadProtectedBlocks();
         randomBlocks = BlockConfig.loadRandomBlocks();
         blockWeights = BlockConfig.loadBlockWeights();
-        // 初始化受保护方块的 Set
-        protectedBlockSet = new HashSet<>();
+        protectedBlockSet.clear();
+        protectedTags.clear();
+
         for (String blockId : protectedBlocks) {
-            if (blockId.startsWith("#")) continue; // 跳过标签
-            Block block = Registries.BLOCK.get(Identifier.tryParse(blockId));
-            protectedBlockSet.add(block);
+            if (blockId.startsWith("#")) {
+                Identifier tagId = Identifier.tryParse(blockId.substring(1));
+                if (tagId != null) {
+                    protectedTags.add(TagKey.of(Registries.BLOCK.getKey(), tagId));
+                }
+            } else {
+                Block block = Registries.BLOCK.get(Identifier.tryParse(blockId));
+                protectedBlockSet.add(block);
+            }
         }
         initWeightedRandomBlocks();
     }
 
+    public static boolean isProtected(BlockState state) {
+        return protectedBlockSet.contains(state.getBlock()) ||
+                protectedTags.stream().anyMatch(state::isIn);
+    }
+
     private static void initWeightedRandomBlocks() {
         weightedRandomBlocks = new ArrayList<>();
+        final int DEFAULT_WEIGHT = 50;// 默认权重
         for (String blockId : randomBlocks) {
-            // 使用新的方式获取 Block 对象
             Block block = Registries.BLOCK.get(Identifier.tryParse(blockId));
-            int weight = blockWeights.getOrDefault(blockId, 1);
+            int weight = blockWeights.getOrDefault(blockId, DEFAULT_WEIGHT);
             for (int i = 0; i < weight; i++) {
                 weightedRandomBlocks.add(block);
             }
         }
-    }
-
-    public static boolean isProtected(BlockState state) {
-        // 先检查快速匹配
-        if (protectedBlockSet.contains(state.getBlock())) return true;
-
-        // 再检查标签
-        for (String tagName : protectedBlocks) {
-            if (tagName.startsWith("#")) {
-                Identifier tagId = Identifier.tryParse(tagName.substring(1));
-                if (tagId != null && state.isIn(TagKey.of(Registries.BLOCK.getKey(), tagId))) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }
