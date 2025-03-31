@@ -17,15 +17,69 @@ public class AsyncChunkProcessor {
     private static final int THREAD_COUNT = Runtime.getRuntime().availableProcessors();
     public static ExecutorService EXECUTOR = Executors.newFixedThreadPool(THREAD_COUNT);
 
-    private static int currentRadius = 16;
-    private static final int RADIUS_INCREMENT = 8;
+    private static boolean isRunning = false;
+    private static boolean isPaused = false;
+    private static int taskRadius = 0;
+    private static ServerWorld currentWorld = null;
+    private static int totalChunks = 0;
+    private static int processedChunks = 0;
 
-    public static void processWorld(ServerWorld world) {
+    public static void startProcessingTask(ServerWorld world, int radius) {
+        if (isRunning) {
+            sendChatMessage("已有运行中的任务，先停止再启动新任务。");
+            return;
+        }
+        isRunning = true;
+        isPaused = false;
+        taskRadius = radius;
+        currentWorld = world;
+        totalChunks = calculateTotalChunks(radius);
+        processedChunks = 0;
+
+        sendChatMessage("任务开始，预计处理 " + totalChunks + " 个区块。");
+        EXECUTOR.execute(() -> processWorld(world, radius));
+    }
+
+    public static void stopProcessingTask() {
+        if (!isRunning) return;
+        isRunning = false;
+        isPaused = false;
+        taskRadius = 0;
+        currentWorld = null;
+        EXECUTOR.shutdownNow();
+        EXECUTOR = Executors.newFixedThreadPool(THREAD_COUNT);
+    }
+
+    public static void pauseProcessingTask() {
+        if (isRunning) {
+            isPaused = true;
+        }
+    }
+
+    public static void continueProcessingTask() {
+        if (isRunning && isPaused) {
+            isPaused = false;
+            EXECUTOR.execute(() -> processWorld(currentWorld, taskRadius));
+        }
+    }
+
+    public static boolean isRunning() {
+        return isRunning;
+    }
+
+    public static boolean isPaused() {
+        return isPaused;
+    }
+
+    private static void processWorld(ServerWorld world, int radius) {
+        if (world == null) return;
         BlockPos spawnPos = world.getSpawnPos();
         int spawnX = spawnPos.getX();
         int spawnZ = spawnPos.getZ();
 
-        for (int r = 0; r <= currentRadius; r += RADIUS_INCREMENT) {
+        for (int r = 0; r <= radius; r += 8) {
+            if (!isRunning || isPaused) return;
+
             List<CompletableFuture<Void>> futures = new ArrayList<>();
             for (int dx = -r; dx <= r; dx += 16) {
                 for (int dz = -r; dz <= r; dz += 16) {
@@ -34,9 +88,7 @@ public class AsyncChunkProcessor {
                     int chunkX = (spawnX + dx) >> 4;
                     int chunkZ = (spawnZ + dz) >> 4;
                     ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
-                    if (ChunkStorage.isChunkProcessed(chunkPos)) {
-                        continue;
-                    }
+                    if (ChunkStorage.isChunkProcessed(chunkPos)) continue;
 
                     Chunk chunk = world.getChunk(chunkX, chunkZ);
                     futures.add(processChunkAsync(world, chunk, chunkPos));
@@ -44,8 +96,9 @@ public class AsyncChunkProcessor {
             }
 
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-            currentRadius += RADIUS_INCREMENT;
         }
+        isRunning = false;
+        sendChatMessage("任务完成，成功处理 " + processedChunks + " 个区块。");
     }
 
     private static CompletableFuture<Void> processChunkAsync(ServerWorld world, Chunk chunk, ChunkPos chunkPos) {
@@ -71,13 +124,35 @@ public class AsyncChunkProcessor {
                 Block randomBlock = WeightedRandomizer.getRandomBlock();
                 world.setBlockState(pos, randomBlock.getDefaultState(), 3);
             }
-            // 处理完成后标记区块
             ChunkStorage.markChunkProcessed(chunkPos);
-            Text message = Text.literal( "处理区块: " + chunk.getPos().x + ", " + chunk.getPos().z );
-            if (MinecraftClient.getInstance().player != null) {
-                MinecraftClient.getInstance().player.sendMessage(message, false);
-            }
+            processedChunks++;
+            sendProgressMessage();
         }, world.getServer());
+    }
 
+    private static int calculateTotalChunks(int radius) {
+        int count = 0;
+        for (int r = 0; r <= radius; r += 8) {
+            for (int dx = -r; dx <= r; dx += 16) {
+                for (int dz = -r; dz <= r; dz += 16) {
+                    if (Math.abs(dx) != r && Math.abs(dz) != r) continue;
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private static void sendProgressMessage() {
+        if (totalChunks > 0) {
+            int progress = (int) ((processedChunks / (double) totalChunks) * 100);
+            sendChatMessage("任务进度: " + progress + "%");
+        }
+    }
+
+    private static void sendChatMessage(String message) {
+        if (MinecraftClient.getInstance().player != null) {
+            MinecraftClient.getInstance().player.sendMessage(Text.literal(message), false);
+        }
     }
 }
