@@ -24,12 +24,14 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    implementation 'org.iq80.leveldb:leveldb:0.12'
-    implementation 'org.iq80.leveldb:leveldb-api:0.12'
+    include(implementation('org.iq80.leveldb:leveldb:0.12') {
+        exclude group: 'com.google.guava', module: 'guava' // 使用MC自带的Guava
+    })
+    include 'org.iq80.leveldb:leveldb-api:0.12'
 }
+
 
 processResources {
     inputs.property "version", project.version
@@ -73,6 +75,7 @@ jar {
     }
 }
 
+
 // configure the maven publication
 publishing {
     publications {
@@ -88,5 +91,17 @@ publishing {
         // Notice: This block does NOT have the same function as the block in the top level.
         // The repositories here will be used for publishing your artifact, not for
         // retrieving dependencies.
+    }
+}
+tasks.remapJar {
+    archiveFileName = "${project.archivesBaseName}-${project.version}.jar"
+    doLast {
+        // 手动删除不需要的文件
+        delete fileTree(dir: archiveFile.get().asFile.parent, includes: [
+                "*-dev.jar",
+                "*-sources.jar",
+                "*.json",
+                "*.md"
+        ])
     }
 }
